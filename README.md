@@ -1,5 +1,3 @@
-# nodejs-mongodb-docker-kubernetes-lab
-Hands-on lab for deploying a Node.js and MongoDB application using Docker and Kubernetes.
 
 # Node.js and MongoDB Deployment Lab using Docker and Kubernetes
 
@@ -53,3 +51,91 @@ Docker network
 pacman-mongo container
   ↓
 MongoDB database
+```
+## Key Docker Steps
+
+Created a Docker network:
+sudo docker network create pacman-net
+
+Started MongoDB 3.4:
+sudo docker run -d --name pacman-mongo --network pacman-net --restart unless-stopped mongo:3.4
+
+Built the Node.js application image:
+sudo docker build -t pacman-nodejs-app -f ./docker/Dockerfile .
+
+Started the application container with MongoDB environment variables:
+sudo docker run -d \
+  --name pacman-app \
+  --network pacman-net \
+  -p 8080:8080 \
+  --restart unless-stopped \
+  -e MONGO_SERVICE_HOST=pacman-mongo \
+  -e MY_MONGO_PORT=27017 \
+  -e MONGO_DATABASE=pacman \
+  pacman-nodejs-app
+
+  Checked running containers:
+  sudo docker ps
+
+## Verification
+
+The application was tested through the browser and the Pac-Man game loaded successfully.
+
+The high score function was also tested and verified in MongoDB:
+sudo docker exec pacman-mongo mongo pacman --quiet --eval 'db.highscore.find().pretty()'
+
+This confirmed that the Node.js application was able to connect to MongoDB and save high score data.
+
+## Kubernetes Bonus Deployment
+
+I also deployed the same application and database on a local Kubernetes cluster using Docker Desktop.
+
+The Kubernetes deployment used:
+
+MongoDB Deployment
+MongoDB Service
+Pac-Man App Deployment
+Pac-Man App NodePort Service
+
+The application was exposed locally using NodePort on port 30080.
+Browser
+  ↓
+localhost:30080
+  ↓
+pacman-app Service
+  ↓
+pacman-app Pod
+  ↓
+pacman-mongo Service
+  ↓
+pacman-mongo Pod
+
+## Kubernetes Verification
+
+Checked cluster node:
+kubectl get nodes
+
+Checked running pods:
+kubectl get pods
+
+Checked services:
+kubectl get svc
+
+The Pac-Man application pod and MongoDB pod were both running successfully, and the application was accessible through:
+http://localhost:30080
+
+## What I Learned
+
+From this lab, I learned:
+
+How to deploy a Node.js application with MongoDB
+How Docker containers communicate using a Docker network
+How to use environment variables for database connection configuration
+How to expose a containerized web application using port mapping
+How to verify data persistence in MongoDB
+Basic Kubernetes concepts such as Pod, Deployment, Service, and NodePort
+The difference between running containers manually with Docker and managing them with Kubernetes
+
+## Notes
+
+This project is for learning and portfolio documentation. The Kubernetes setup uses local Docker Desktop Kubernetes and does not include persistent volume storage for MongoDB.
